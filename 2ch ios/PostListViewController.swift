@@ -79,10 +79,18 @@ class PostListViewController: UITableViewController {
             guard let url = URL(string: "https://2ch.hk/\(thumb)") else {return cell!}
             cell?.postImage?.af_setImage(withURL: url)
         }
+        else{
+            cell?.postImage?.isHidden = true
+        }
         
         cell?.postTitle?.text = "\(post.name) \(post.date) №\(post.num)"
-        cell?.postBody?.text = post.comment
-        cell?.postBody.sizeToFit()
+        var comment = post.comment.replacingOccurrences(of: "<br>", with: "\n")
+        let pattern = "<.+>"
+        comment.removingRegexMatches(pattern: pattern)
+        cell?.postBody?.text = comment
+        cell?.postBody?.lineBreakMode = .byWordWrapping
+        cell?.postBody?.numberOfLines = 0
+        //cell?.postBody.sizeToFit()
         return cell!
     }
 
@@ -101,5 +109,22 @@ class PostListViewController: UITableViewController {
         }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        self.tableView.rowHeight = UITableViewAutomaticDimension
+        self.tableView.estimatedRowHeight = 200
+    }
+    
 
+}
+
+extension String {
+    mutating func removingRegexMatches(pattern: String, replaceWith: String = ""){
+        do {
+            let regex = try NSRegularExpression(pattern: pattern, options: NSRegularExpression.Options.caseInsensitive)
+            let range = NSMakeRange(0, self.count)
+            self = regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: replaceWith)
+        } catch {
+            return
+        }
+    }
 }

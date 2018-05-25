@@ -88,12 +88,36 @@ class ThreadListViewController: UITableViewController {
         guard let thumb = thread.files?[0].thumbnail else {return cell!}
         guard let url = URL(string: "https://2ch.hk/\(thumb)") else {return cell!}
         cell?.threadImage?.af_setImage(withURL: url)
+        cell?.threadImage?.tag = indexPath.row
         cell?.threadTitle?.text = thread.subject
-        cell?.threadComment?.text = thread.comment
+        var comment = thread.comment.replacingOccurrences(of: "<br>", with: "\n")
+        let pattern = "<.+>"
+        comment.removingRegexMatches(pattern: pattern)
+        cell?.threadComment?.text = comment
         cell?.threadComment.sizeToFit()
+        
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
+        tapGestureRecognizer.numberOfTapsRequired = 1
+        cell?.threadImage?.isUserInteractionEnabled = true
+        cell?.threadImage?.addGestureRecognizer(tapGestureRecognizer)
+        
         return cell!
     }
     
+    @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer){
+        let imgView = tapGestureRecognizer.view as! UIImageView
+        guard let files = board?.threads[imgView.tag].files else {return}
+        if (files.count > 0){
+            guard let picViewController = self.storyboard?.instantiateViewController(withIdentifier: "PictureViewContoller") as? PictureViewController else {
+                return
+            }
+            picViewController.pictures = files
+            self.navigationController?.pushViewController(picViewController, animated: true)
+        }
+        else {return}
+        
+        
+    }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 //        guard let picViewController = self.storyboard?.instantiateViewController(withIdentifier: "PictureViewContoller") as? PictureViewController else {
 //            return
